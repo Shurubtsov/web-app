@@ -6,22 +6,36 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"dshurubtsov.com/snippetbox/cmd/config"
 )
+
+// // struct for storage dependencies of logs and others
+// type application struct {
+// 	errorLog *log.Logger
+// 	infoLog  *log.Logger
+// }
 
 func main() {
 	// configuration
 	addr := flag.String("addr", ":4000", "Net address HTTP")
 	flag.Parse()
 
+	// configure new loggers
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)                  // info
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile) // errors
+
+	// init application object
+	app := &config.Application{
+		ErrorLog: errorLog,
+		InfoLog:  infoLog,
+	}
+
 	// main handlers for pages
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
-
-	// configure new loggers
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime) // info
-	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	mux.HandleFunc("/", Home(app))
+	mux.HandleFunc("/snippet", ShowSnippet(app))
+	mux.HandleFunc("/snippet/create", CreateSnippet(app))
 
 	// initialize FileServer for proccesing HTTP requsts to static files from dir /ui/static
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})

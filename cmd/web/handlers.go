@@ -28,16 +28,14 @@ func Home(app *config.Application) http.HandlerFunc {
 		// func for read file of template home page
 		ts, err := template.ParseFiles(files...)
 		if err != nil {
-			app.ErrorLog.Println(err.Error())
-			http.Error(w, "Internal Server Error", 500)
+			app.ServerError(w, err)
 			return
 		}
 
 		// Execute() for write template in body HTTP response
 		err = ts.Execute(w, nil)
 		if err != nil {
-			app.ErrorLog.Println(err.Error())
-			http.Error(w, "Internal Server Error", 500)
+			app.ServerError(w, err)
 		}
 	}
 }
@@ -49,7 +47,7 @@ func ShowSnippet(app *config.Application) http.HandlerFunc {
 		// if query id is incorrect then we return not found error
 		id, err := strconv.Atoi(r.URL.Query().Get("id"))
 		if err != nil || id < 1 {
-			http.NotFound(w, r)
+			app.NotFound(w)
 			return
 		}
 
@@ -64,8 +62,7 @@ func CreateSnippet(app *config.Application) http.HandlerFunc {
 		// settings for forbiddence requests without POST method
 		if r.Method != http.MethodPost {
 			w.Header().Set("Allow", http.MethodPost)
-
-			http.Error(w, "Forbidden method!", http.StatusMethodNotAllowed)
+			app.ClientError(w, http.StatusMethodNotAllowed)
 			return
 		}
 

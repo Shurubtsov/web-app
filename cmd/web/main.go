@@ -1,26 +1,45 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
 func main() {
+	// configuration
+	addr := flag.String("addr", ":4000", "Net address HTTP")
+	flag.Parse()
+
+	// main handlers for pages
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
 	mux.HandleFunc("/snippet", showSnippet)
 	mux.HandleFunc("/snippet/create", createSnippet)
 
+	// configure new loggers
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime) // info
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
 	// initialize FileServer for proccesing HTTP requsts to static files from dir /ui/static
-	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./static/")})
+	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
 
 	// using func mux.Handle() for registration proccesor for all requests which starts from "ui/static/"
+	mux.Handle("/static", http.NotFoundHandler())
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	log.Println("запуск веб-сервера на http://127.0.0.1:4000")
-	err := http.ListenAndServe(":4000", mux)
-	log.Fatal(err)
+	// initialize custom server for our error logs
+	srv := &http.Server{
+		Addr:     *addr,
+		ErrorLog: errorLog,
+		Handler:  mux,
+	}
+
+	infoLog.Printf("start server on %s", *addr)
+	err := srv.ListenAndServe()
+	errorLog.Fatal(err)
 }
 
 // structure for defense static directory from client requests

@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"dshurubtsov.com/snippetbox/cmd/config"
+	"dshurubtsov.com/snippetbox/pkg/models/mysql"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -32,6 +33,7 @@ func main() {
 	app := &config.Application{
 		ErrorLog: errorLog,
 		InfoLog:  infoLog,
+		Snippets: &mysql.SnippetModel{DB: db},
 	}
 
 	// initialize custom server for our error logs
@@ -46,6 +48,7 @@ func main() {
 	errorLog.Fatal(err)
 }
 
+// sql connections pull
 func openDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {

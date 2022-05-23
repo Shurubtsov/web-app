@@ -66,6 +66,19 @@ func CreateSnippet(app *config.Application) http.HandlerFunc {
 			return
 		}
 
-		w.Write([]byte("Create snippet here!"))
+		// test data
+		title := "The story of the snail"
+		content := "The snail crawled out of the shell,\npulled out its horns,\nand picked them up again."
+		expires := "7"
+
+		// transfer data to method app.Snippets.Insert() for create snippet and return ID
+		id, err := app.Snippets.Insert(title, content, expires)
+		if err != nil {
+			app.ServerError(w, err)
+			return
+		}
+
+		// redirect user to relevant page of snippet
+		http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
 	}
 }

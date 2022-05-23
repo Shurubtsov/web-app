@@ -23,7 +23,7 @@ func (m *SnippetModel) Insert(title, content, expires string) (int, error) {
 		return 0, err
 	}
 
-	// method LastInsertId() so get last ID inserted entry from table
+	// method LastInsertId() so get last ID inserted note from table
 	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, err
@@ -32,8 +32,9 @@ func (m *SnippetModel) Insert(title, content, expires string) (int, error) {
 	return int(id), nil
 }
 
+// Method for Get snippet from ID
 func (m *SnippetModel) Get(id int) (*models.Snippet, error) {
-	// SQL query for get data of one entry
+	// SQL query for get data of one note
 	stmt := `SELECT id, title, content, created, expires FROM snippets
 	WHERE expires > UTC_TIMESTAMP() AND id = ?`
 
@@ -58,6 +59,39 @@ func (m *SnippetModel) Get(id int) (*models.Snippet, error) {
 	return s, nil
 }
 
+// Method for get Latest note
 func (m *SnippetModel) Latest() ([]*models.Snippet, error) {
-	return nil, nil
+
+	// SQL query for get latest data from table snippets
+	stmt := `SELECT id, title, content, created, expires FROM snippets 
+	WHERE expires > UTC_TIMESTAMP() ORDER BY created DESC LIMIT 10`
+
+	// Use the Query() method to execute our SQL query.
+	// In response, we will receive sql.Rows, which contains the result of our query.
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	// Delay call rows.Close() to sure what results close right
+	defer rows.Close()
+
+	// init slice for storage objects models.Snippet
+	var snippets []*models.Snippet
+
+	for rows.Next() {
+		// pointer to new struct Snippet
+		s := &models.Snippet{}
+		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+		if err != nil {
+			return nil, err
+		}
+		snippets = append(snippets, s)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return snippets, nil
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+
 	"html/template"
 	"net/http"
 	"strconv"
@@ -19,6 +20,15 @@ func Home(app *config.Application) http.HandlerFunc {
 			http.NotFound(w, r)
 			return
 		}
+
+		// s, err := app.Snippets.Latest()
+		// if err != nil {
+		// 	app.ServerError(w, err)
+		// }
+
+		// for _, snippet := range s {
+		// 	fmt.Fprintf(w, "%v\n", snippet)
+		// }
 
 		// files of templates
 		files := []string{

@@ -21,14 +21,12 @@ func Home(app *config.Application) http.HandlerFunc {
 			return
 		}
 
-		// s, err := app.Snippets.Latest()
-		// if err != nil {
-		// 	app.ServerError(w, err)
-		// }
+		s, err := app.Snippets.Latest()
+		if err != nil {
+			app.ServerError(w, err)
+		}
 
-		// for _, snippet := range s {
-		// 	fmt.Fprintf(w, "%v\n", snippet)
-		// }
+		data := &templateData{Snippets: s}
 
 		// files of templates
 		files := []string{
@@ -45,7 +43,7 @@ func Home(app *config.Application) http.HandlerFunc {
 		}
 
 		// Execute() for write template in body HTTP response
-		err = ts.Execute(w, nil)
+		err = ts.Execute(w, data)
 		if err != nil {
 			app.ServerError(w, err)
 		}
@@ -72,9 +70,28 @@ func ShowSnippet(app *config.Application) http.HandlerFunc {
 			}
 			return
 		}
+		// init data object include snippets
+		data := &templateData{Snippet: s}
+
+		// init temp
+		files := []string{
+			"./ui/html/show.page.html",
+			"./ui/html/base.layout.html",
+			"./ui/html/footer.partial.html",
+		}
+
+		// parse temp files
+		ts, err := template.ParseFiles(files...)
+		if err != nil {
+			app.ServerError(w, err)
+			return
+		}
 
 		// response
-		fmt.Fprintf(w, "%v", s)
+		err = ts.Execute(w, data)
+		if err != nil {
+			app.ServerError(w, err)
+		}
 	}
 }
 

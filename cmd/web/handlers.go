@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
 
 	"dshurubtsov.com/snippetbox/cmd/config"
+	"dshurubtsov.com/snippetbox/pkg/models"
 )
 
 // handler for processing homepage
@@ -51,7 +53,18 @@ func ShowSnippet(app *config.Application) http.HandlerFunc {
 			return
 		}
 
-		fmt.Fprintf(w, "Snippet with ID %d", id)
+		s, err := app.Snippets.Get(id)
+		if err != nil {
+			if errors.Is(err, models.ErrNoRecord) {
+				app.NotFound(w)
+			} else {
+				app.ServerError(w, err)
+			}
+			return
+		}
+
+		// response
+		fmt.Fprintf(w, "%v", s)
 	}
 }
 
